@@ -1,11 +1,10 @@
 package com.neo.controller;
 
+import com.neo.config.UploadConfig;
 import com.neo.tools.Upload;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -21,6 +20,9 @@ import java.util.List;
 public class UploadController {
     //Save the uploaded file to this folder
     private static String UPLOADED_FOLDER = "D:\\test\\";
+
+    @Autowired
+    UploadConfig uploadConfig;
 
     @GetMapping("/")
     public String index() {
@@ -73,6 +75,28 @@ public class UploadController {
         System.out.println("uploads");
 
         return Upload.uploadFiless(files);
+    }
+
+    @ResponseBody
+    @PostMapping("/{savePath}/upload") // //new annotation since 4.3
+    public String uploadByAjax(@RequestParam("file") MultipartFile file, @PathVariable String savePath) {
+
+        if (file.isEmpty()) {
+            return "error,the file is empty!";
+        }
+
+        try {
+            // Get the file and save it somewhere
+            byte[] bytes = file.getBytes();
+            Path path = Paths.get(uploadConfig.getUploadPath() + savePath +"//" + file.getOriginalFilename());
+            System.out.println(path);
+            Files.write(path, bytes);
+
+            return "You successfully uploaded '" + file.getOriginalFilename() + "'";
+
+        } catch (IOException e) {
+            return "upload error!";
+        }
     }
 
 
